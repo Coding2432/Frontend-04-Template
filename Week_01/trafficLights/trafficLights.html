@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>红绿灯</title>
+    <style>
+        .lamp {
+            width: 50px;
+            height: 50px;
+            display: inline-block;
+            border-radius: 25px;
+            border: #999999 solid 1px;
+        }
+        
+        .lamp:nth-child(1) {
+            background-color: rgba(0, 128, 0, 1);
+        }
+        
+        .lamp:nth-child(2) {
+            background-color: rgba(255, 255, 0, 0.1);
+        }
+        
+        .lamp:nth-child(3) {
+            background-color: rgba(255, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <div class="lamp"></div>
+        <div class="lamp"></div>
+        <div class="lamp"></div>
+    </div>
+    <script>
+        let time = 10000;
+        let showIndex = 0; //0 绿灯 1 黄灯 2 红灯
+        let lampList = document.getElementsByClassName('lamp');
+        let times = [10000, 3000, 5000];
+
+        function changeLamp() {
+            showIndex = (++showIndex) % 3;
+            let opcaity = 1;
+            for (let i = 0; i < 3; i++) {
+                if (i == showIndex) {
+                    opcaity = 1;
+                } else {
+                    opcaity = 0.1;
+                }
+                if (i == 0) {
+                    lampList[i].style.backgroundColor = 'rgba(0, 128, 0,' + opcaity + ')';
+                } else if (i == 1) {
+                    lampList[i].style.backgroundColor = 'rgba(255, 255, 0,' + opcaity + ')';
+                } else {
+                    lampList[i].style.backgroundColor = 'rgba(255, 0, 0,' + opcaity + ')';
+                }
+            }
+            time = times[showIndex];
+            setTimeout(changeLamp, time);
+        }
+    </script>
+</body>
+
+</html>
