@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>启发式搜索</title>
+    <style>
+        .cell {
+            width: 6px;
+            height: 6px;
+            line-height: 7px;
+            background-color: grey;
+            border-right: solid 1px white;
+            border-bottom: solid 1px white;
+            vertical-align: middle;
+        }
+        
+        #container {
+            display: flex;
+            flex-wrap: wrap;
+            width: 701px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+    <div>起点:<input id="startPoint" type="text" value="[0,0]"> 终点:
+        <input id="endPoint" type="text" value="[50,50]">
+    </div>
+    <button onclick="goToFindPath()">寻找路径</button>
+    <button onclick="saveMap()">保存</button>
+    <button onclick="clearPath()">清除路径</button>
+    <button onclick="clearMap()">清屏</button>
+
+    <script>
+        class Sorted {
+            constructor(data, compare) {
+                this.data = data.slice();
+                this.compare = compare || ((a, b) => a - b);
+            }
+            take() {
+                if (!this.data.length) {
+                    return;
+                }
+                let min = this.data[0];
+                let minIndex = 0;
+                for (let i = 0; i < this.data.length; i++) {
+                    if (this.compare(this.data[i], min) < 0) {
+                        min = this.data[i];
+                        minIndex = i;
+                    }
+                }
+                this.data[minIndex] = this.data[this.data.length - 1];
+                this.data.pop();
+                return min;
+            }
+            give(v) {
+                this.data.push(v);
+            }
+            length() {
+                return data.length;
+            }
+        }
+
+        let map = localStorage["map"] ? JSON.parse(localStorage["map"]) : Array(10000).fill(0);
+
+        var container = document.getElementById("container");
+
+        function addCell() {
+            for (let i = 0; i < 100; i++) {
+                for (let j = 0; j < 100; j++) {
+                    let cell = document.createElement("div");
+                    cell.classList.add("cell");
+
+                    if (map[100 * i + j] == 1) {
+                        cell.style.backgroundColor = "black";
+                    }
+
+                    cell.addEventListener("mousemove", () => {
+                        if (mousedown) {
+                            if (clear) {
+                                cell.style.backgroundColor = "";
+                                map[100 * i + j] = 0;
+                            } else {
+                                cell.style.backgroundColor = "black";
+                                map[100 * i + j] = 1;
+                            }
+                        }
+                    });
+                    container.appendChild(cell);
+                }
+            }
+        }
+
+        function saveMap() {
+            let length = map.length;
+            let temMap = Array(10000).fill(0);
+            for (let i = 0; i < length; i++) {
+                if (map[i] == 1) {
+                    temMap[i] = 1;
+                }
+            }
+            localStorage['map'] = JSON.stringify(temMap);
+        }
+
+        function clearPath() {
+            let length = map.length;
+            for (let i = 0; i < length; i++) {
+                if (map[i] != 0 && map[i] != 1) {
+                    map[i] = 0;
+                }
+            }
+            container.innerHTML = "";
+            addCell();
+        }
+
+        function clearMap() {
+            map.fill(0);
+            localStorage["map"] = "";
+            container.innerHTML = "";
+            addCell();
+        }
+
+        addCell();
+        let mousedown = false;
+        let clear = false;
+        document.addEventListener("mousedown", e => {
+            mousedown = true;
+            clear = (e.which == 3);
+        });
+        document.addEventListener("mouseup", () => mousedown = false);
+        document.addEventListener("contextmenu", e => e.preventDefault());
+
+        function sleep(time) {
+            return new Promise(function(resolve, reject) {
+                setTimeout(resolve, time);
+            });
+        }
+
+        function goToFindPath() {
+            let startPoint = document.getElementById("startPoint").value;
+            let endPoint = document.getElementById("endPoint").value;
+            findPath(map, JSON.parse(startPoint), JSON.parse(endPoint));
+        }
+
+        async function findPath(map, start, end) {
+            let table = Object.create(map);
+            let queue = new Sorted([start], (a, b) => distance(a) - distance(b));
+            async function insert(x, y, pre) {
+                if (x < 0 || x >= 100 || y < 0 || y >= 100) {
+                    return;
+                }
+                if (map[100 * x + y]) {
+                    return;
+                }
+                // await sleep(30);
+                container.children[100 * x + y].style.backgroundColor = "lightgreen";
+                map[100 * x + y] = 2;
+                table[100 * x + y] = pre;
+                queue.give([x, y]);
+            }
+
+            function distance(point) {
+                return (point[0] - end[0]) ** 2 + (point[1] - end[1]) ** 2;
+            }
+            while (queue.length) {
+                let [x, y] = queue.take();
+                console.log(x, y);
+                if (x === end[0] && y === end[1]) {
+                    let path = [];
+                    while (x != start[0] || y != start[1]) {
+                        [x, y] = table[100 * x + y];
+                        await sleep(30);
+                        container.children[100 * x + y].style.backgroundColor = "purple"
+                    }
+                    return path;
+                }
+                await insert(x - 1, y, [x, y]);
+                await insert(x, y - 1, [x, y]);
+                await insert(x + 1, y, [x, y]);
+                await insert(x, y + 1, [x, y]);
+
+                await insert(x - 1, y - 1, [x, y]);
+                await insert(x + 1, y - 1, [x, y]);
+                await insert(x + 1, y + 1, [x, y]);
+                await insert(x - 1, y + 1, [x, y]);
+            }
+            return null;
+        }
+    </script>
+</body>
+
+</html>
